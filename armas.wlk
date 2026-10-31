@@ -45,3 +45,54 @@ class Escopeta inherits Arma {
     override method cadencia() = 8
 }
 
+// ! Clase Proyectil
+class Proyectil {
+    var property position
+    const property danio
+
+
+    method avanzar()
+    method verificarImpacto()
+
+
+    method actualizar() {
+        self.verificarImpacto()
+        if (juego.tieneProyectil(self)) {   
+            self.avanzar()
+            self.verificarImpacto()
+        }
+    }
+}
+
+class Bala inherits Proyectil {
+    method image() = "bala.png"
+
+
+    override method avanzar() {
+        position = position.right(1)
+    }
+
+
+    override method verificarImpacto() {
+        juego.verificarImpactoBala(self)
+    }
+}
+
+class FlechaDeFuego inherits Proyectil {
+    method image() = "flecha_fuego.png"
+
+
+    override method avanzar() {
+        position = position.left(1)
+    }
+
+
+    override method verificarImpacto() {
+        if (juego.mismaCelda(position, heroe.position())) {
+            juego.removerProyectil(self)
+            heroe.recibirAtaque(danio)
+        } else if (position.x() < 0) {
+            juego.removerProyectil(self)
+        }
+    }
+}
