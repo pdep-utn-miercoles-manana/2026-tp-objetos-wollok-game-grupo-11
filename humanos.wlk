@@ -1,3 +1,7 @@
+// humanos.wlk
+// humanos.wlk
+// humanos.wlk
+// humanos.wlk
 import wollok.game.*
 import armas.*
 import juego.*
@@ -26,11 +30,20 @@ class Heroe inherits Personaje {
 	const property rifle = new Rifle()
 	const property escopeta = new Escopeta()
 	var property arma = pistola
+    var property  debilitamiento = 0
 
 	override method vidaMaxima() = 100
 	method poderMinimo() = 30
 
-	method image() = "heroe.png"
+	method image() {
+        if (arma == pistola) {
+            return "assets/heroe_pistola.png"
+        }
+        if (arma == rifle) {
+            return "assets/heroe_rifle.png"
+        }
+        return "assets/heroe_escopeta.png"
+    }
 	method poder() = poder
 	method arma() = arma
 	method mejoras() = mejoras
@@ -68,8 +81,12 @@ class Heroe inherits Personaje {
     }
 
 
-    method danioEfectivo() = (arma.danio() * poder / 100).max(1)
+    method danioEfectivo() = (arma.danio() * self.poderActual() / 100).max(1)
 
+    method debilitar(cantidad, milisegundos) {
+        debilitamiento += cantidad
+        game.schedule(milisegundos, { debilitamiento -= cantidad })
+    }
 
     method disparar() {
         if (ticksDesdeDisparo >= arma.cadencia()) {
@@ -81,21 +98,20 @@ class Heroe inherits Personaje {
 
     override method recibirAtaque(danio) {
         super(danio)
-        poder = (poder - danio).max(self.poderMinimo())
         if (!self.estaVivo()) {
             juego.perder()
         }
     }
 
 
-    method recuperarPoder() {
-        poder = (poder + 25).min(100)
-    }
+    method poderActual() = (poder - debilitamiento).max(self.poderMinimo())
+
 
 
     method equipar(unArma) {
         if (unArma.desbloqueada()) {
             arma = unArma
+            game.say(self, "Cambio a " + unArma.nombre())
         } else {
             game.say(self, unArma.nombre() + " bloqueada")
         }
@@ -117,6 +133,7 @@ class Heroe inherits Personaje {
         if (mejoras > 0 && arma.puedeMejorar()) {
             arma.mejorar()
             mejoras -= 1
+            game.say(self, arma.nombre() + " subió de nivel!")
         }
     }
 }// ! CLase Enemigo
@@ -185,7 +202,7 @@ class ZombieComun inherits Enemigo {
     override method danio() = 8
     override method ritmoMovimiento() = 8
     override method ritmoAtaque() = 10
-    override method image() = "zombie_comun.png"
+    override method image() = "assets/zombie_comun.png"
 }
 
 
@@ -194,32 +211,33 @@ class ZombieRapido inherits Enemigo {
     override method danio() = 5
     override method ritmoMovimiento() = 3
     override method ritmoAtaque() = 6
-    override method image() = "zombie_rapido.png"
+    override method image() = "assets/zombie_rapido.png"
 }
 
 
-class Licker inherits Enemigo {
+class Regenerador inherits Enemigo {
     override method vidaMaxima() = 120
     override method danio() = 15
     override method ritmoMovimiento() = 12
     override method ritmoAtaque() = 14
-    override method image() = "licker.png"
+    override method image() = "assets/regenerador.png"
 }
 
 
 class ZombieBallestero inherits Enemigo {
     override method vidaMaxima() = 35
-    override method danio() = 12
+    override method danio() = 0
     override method ritmoMovimiento() = 9
     override method ritmoAtaque() = 10
-    override method image() = "zombie_ballestero.png"
+    override method image() = "assets/zombie_ballestero.png"
+    method reduccionDeDanio() = 10
 
 
     method distanciaDeDisparo() = 5
 
 
     override method atacar(objetivo) {
-        juego.agregarProyectil(new FlechaDeFuego(position = position.left(1), danio = self.danio()))
+        juego.agregarProyectil(new FlechaDeFuego(position = position.left(1), danio = self.reduccionDeDanio()))
     }
 
 
@@ -240,24 +258,37 @@ class ZombieBallestero inherits Enemigo {
 }
 
 
-class JefeNemesis inherits Enemigo {
+class JefeSaddler inherits Enemigo {
     var ataques = 0
+    const frases = [
+        "No saldrás vivo de aquí...",
+        "Tu esfuerzo es inútil, Leon.",
+        "Ríndete."
+    ]
 
-
-    override method vidaMaxima() = 400
+    override method vidaMaxima() = 600
     override method danio() = 20
     override method ritmoMovimiento() = 10
     override method ritmoAtaque() = 12
-    override method image() = "nemesis.png"
+    override method image() = "assets/saddler.png"
+
+
 
 
     override method atacar(objetivo) {
         ataques += 1
         if (ataques % 3 == 0) {
-            game.say(self, "¡STARS!")
+            game.say(self, "Ha llegado la hora, Leon")
             objetivo.recibirAtaque(self.danio() * 2)
         } else {
             super(objetivo)
+        }
+    }
+
+        override method actualizar() {
+        super()
+        if (ticks % 60 == 0) {
+            game.say(self, frases.anyOne())
         }
     }
 }

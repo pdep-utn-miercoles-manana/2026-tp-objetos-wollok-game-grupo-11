@@ -21,6 +21,9 @@ class Arma {
         if (self.puedeMejorar()) {
             nivel += 1
         }
+        else {
+            game.say(self, "Nivel máximo alcanzado, mejora otra arma")
+        }
     }
 }
 
@@ -48,7 +51,7 @@ class Escopeta inherits Arma {
 // ! Clase Proyectil
 class Proyectil {
     var property position
-    const property danio
+    const property danio // danio puede ser un valor que baje vida o que baje stats
 
 
     method avanzar()
@@ -65,7 +68,7 @@ class Proyectil {
 }
 
 class Bala inherits Proyectil {
-    method image() = "bala.png"
+    method image() = "assets/bala.png"
 
 
     override method avanzar() {
@@ -79,7 +82,7 @@ class Bala inherits Proyectil {
 }
 
 class FlechaDeFuego inherits Proyectil {
-    method image() = "flecha_fuego.png"
+    method image() = "assets/flecha_fuego.png"
 
 
     override method avanzar() {
@@ -90,7 +93,7 @@ class FlechaDeFuego inherits Proyectil {
     override method verificarImpacto() {
         if (juego.mismaCelda(position, heroe.position())) {
             juego.removerProyectil(self)
-            heroe.recibirAtaque(danio)
+            heroe.debilitar(danio, 6000) // debilita una cantidad por 6000 segs
         } else if (position.x() < 0) {
             juego.removerProyectil(self)
         }

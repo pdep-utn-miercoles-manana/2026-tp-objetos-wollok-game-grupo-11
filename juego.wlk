@@ -1,15 +1,28 @@
+// juego.wlk
+// juego.wlk
+// juego.wlk
+// juego.wlk
 import wollok.game.*
 import armas.*
 import humanos.*
 
 // ! HUD
-object hud {
-    method position() = game.at(0, game.height() - 1)
+object hudVida {
+    method position() = game.at(2, game.height() - 1)
     method textColor() = "FFFFFF"
-    method text() = "Vida: " + heroe.vida() + "  |  Poder: " + heroe.poder() + "%  |  " +
-        heroe.arma().nombre() + " Nv." + heroe.arma().nivel() +
-        "  |  Mejoras: " + heroe.mejoras() +
-        "  |  Oleada " + juego.oleada() + "/" + juego.totalOleadas()
+    method text() = "Vida: " + heroe.vida()
+}
+
+object hudArma {
+    method position() = game.at(8, game.height() - 1)
+    method textColor() = "FFFFFF"
+    method text() = heroe.arma().nombre() + " Nv." + heroe.arma().nivel() + "  Mejoras: " + heroe.mejoras()
+}
+
+object hudOleada {
+    method position() = game.at(14, game.height() - 1)
+    method textColor() = "FFFFFF"
+    method text() = "Oleada " + juego.oleada() + "/" + juego.totalOleadas()
 }
 
 // ! Objeto Juego
@@ -28,12 +41,14 @@ object juego {
 
     method configurar() {
         game.title("Resident Evil: Wollok Edition")
-        game.width(40)
-        game.height(15)
-        game.cellSize(50)
+        game.width(16)
+        game.height(9)
+        game.cellSize(40)
 
         game.addVisual(heroe)
-        game.addVisual(hud)
+        game.addVisual(hudVida)
+        game.addVisual(hudArma)
+        game.addVisual(hudOleada)
 
         keyboard.up().onPressDo({ heroe.subir() })
         keyboard.down().onPressDo({ heroe.bajar() })
@@ -61,9 +76,9 @@ object juego {
 
     method zombieComun() = { fila => new ZombieComun(position = self.entrada(fila)) }
     method zombieRapido() = { fila => new ZombieRapido(position = self.entrada(fila)) }
-    method licker() = { fila => new Licker(position = self.entrada(fila)) }
+    method regenerador() = { fila => new Regenerador(position = self.entrada(fila)) }
     method ballestero() = { fila => new ZombieBallestero(position = self.entrada(fila)) }
-    method jefe() = { fila => new JefeNemesis(position = self.entrada(fila)) }
+    method jefe() = { fila => new JefeSaddler(position = self.entrada(fila)) }
 
 
     method composicion(n) {
@@ -74,12 +89,12 @@ object juego {
             return [self.zombieComun(), self.zombieRapido(), self.zombieComun(), self.ballestero(), self.zombieRapido()]
         }
         if (n == 3) {
-            return [self.zombieComun(), self.licker(), self.ballestero(), self.zombieRapido(), self.licker()]
+            return [self.zombieComun(), self.regenerador(), self.ballestero(), self.zombieRapido(), self.regenerador()]
         }
         if (n == 4) {
-            return [self.licker(), self.ballestero(), self.zombieRapido(), self.licker(), self.ballestero(), self.zombieComun()]
+            return [self.regenerador(), self.ballestero(), self.zombieRapido(), self.regenerador(), self.ballestero(), self.zombieComun()]
         }
-        return [self.zombieComun(), self.licker(), self.ballestero(), self.jefe(), self.zombieRapido()]
+        return [self.zombieComun(), self.ballestero(), self.jefe(), self.zombieRapido(), self.zombieComun(), self.zombieComun(), self.zombieComun()]
     }
 
 
@@ -175,7 +190,6 @@ object juego {
 
     method recompensaDeOleada() {
         var mensaje = "¡Sobreviviste! M = mejorar el arma equipada"
-        heroe.recuperarPoder()
         heroe.ganarMejora()
         if (oleada == 1) {
             heroe.desbloquearRifle()
@@ -191,7 +205,7 @@ object juego {
     method ganar() {
         if (!terminado) {
             terminado = true
-            game.say(heroe, "ACABASTE CON TODOS LOS ZOMBIES ¡GANASTE!")
+            game.say(heroe, "Acabaste con todos los zombies, misión cumplida!")
             game.schedule(3000, { game.stop() })
         }
     }
@@ -200,7 +214,7 @@ object juego {
     method perder() {
         if (!terminado) {
             terminado = true
-            game.say(heroe, "TE CONVERTISTE EN ZOMBIE... GAME OVER")
+            game.say(heroe, "Te convertiste en un zombie... Game over")
             game.schedule(3000, { game.stop() })
         }
     }
