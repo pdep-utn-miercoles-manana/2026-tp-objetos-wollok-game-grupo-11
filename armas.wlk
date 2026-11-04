@@ -52,7 +52,7 @@ class Escopeta inherits Arma {
 class Proyectil {
     var property position
     const property danio // danio puede ser un valor que baje vida o que baje stats
-
+    var property direccion = 1 //flag que marca la direccion del proyectil
 
     method avanzar()
     method verificarImpacto()
@@ -72,7 +72,10 @@ class Bala inherits Proyectil {
 
 
     override method avanzar() {
+        if(direccion==1){
         position = position.right(1)
+        }else
+        position = position.left(1)
     }
 
 
@@ -94,6 +97,7 @@ class FlechaDeFuego inherits Proyectil {
         if (juego.mismaCelda(position, heroe.position())) {
             juego.removerProyectil(self)
             heroe.debilitar(danio, 6000) // debilita una cantidad por 6000 segs
+            heroe.recibirAtaque(danio)
         } else if (position.x() < 0) {
             juego.removerProyectil(self)
         }

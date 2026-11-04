@@ -121,7 +121,7 @@ method prepararPartida() {
     method regenerador() = { fila => new Regenerador(position = self.entrada(fila)) }
     method ballestero() = { fila => new ZombieBallestero(position = self.entrada(fila)) }
     method jefe() = { fila => new JefeSaddler(position = self.entrada(fila)) }
-
+    method mercenario() = {fila => new JefeKrauser(position = self.entrada(fila))}
 
     method composicion(n) {
         if (n == 1) {
@@ -134,7 +134,7 @@ method prepararPartida() {
             return [self.zombieComun(), self.regenerador(), self.ballestero(), self.zombieRapido(), self.regenerador(), self.ballestero(), self.zombieComun(), self.zombieComun(), self.zombieRapido(), self.zombieComun()]
         }
         if (n == 4) {
-            return [self.regenerador(), self.ballestero(), self.zombieRapido(), self.regenerador(), self.ballestero(), self.zombieComun(), self.ballestero(), self.regenerador(), self.ballestero(), self.zombieComun(), self.zombieComun()]
+            return [self.regenerador(), self.ballestero(), self.zombieRapido(), self.regenerador(), self.ballestero(), self.zombieComun(), self.ballestero(), self.regenerador(), self.ballestero(), self.zombieComun(), self.zombieComun(),self.mercenario()]
         }
         return [self.zombieComun(), self.ballestero(), self.regenerador(), self.regenerador() , self.jefe(), self.zombieRapido(), self.zombieComun(), self.ballestero(), self.zombieComun(), self.ballestero(), self.ballestero(), self.regenerador(), self.zombieRapido(), self.zombieComun()]
     }

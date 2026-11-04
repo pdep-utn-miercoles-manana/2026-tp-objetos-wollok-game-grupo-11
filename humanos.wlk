@@ -10,6 +10,8 @@ import juego.*
 class Personaje {
 	var property position
 	var danioRecibido = 0
+    
+    var property mirandoIzquierda = false
 
 	method vidaMaxima()
 
@@ -31,18 +33,30 @@ class Heroe inherits Personaje {
 	const property escopeta = new Escopeta()
 	var property arma = pistola
     var property  debilitamiento = 0
+    
 
 	override method vidaMaxima() = 100
 	method poderMinimo() = 30
 
 	method image() {
         if (arma == pistola) {
-            return "assets/heroe_pistola.png"
+            if(mirandoIzquierda){
+                return "assets/heroe_pistola_l.png"
+            }
+            return "assets/heroe_pistola.png"    
         }
-        if (arma == rifle) {
+        else if (arma == rifle) {
+            if(mirandoIzquierda){
+                return "assets/heroe_rifle_l.png"        
+            }
             return "assets/heroe_rifle.png"
         }
-        return "assets/heroe_escopeta.png"
+        else {
+            if(mirandoIzquierda) {
+                return "assets/heroe_escopeta_l.png"
+            }
+            return "assets/heroe_escopeta.png"
+        } 
     }
 	method poder() = poder
 	method arma() = arma
@@ -63,6 +77,7 @@ class Heroe inherits Personaje {
 
 
     method izquierda() {
+        mirandoIzquierda = true
         if (position.x() > 0) {
             position = position.left(1)
         }
@@ -70,6 +85,7 @@ class Heroe inherits Personaje {
 
 
     method derecha() {
+        mirandoIzquierda = false
         if (position.x() < game.width() - 2) {
             position = position.right(1)
         }
@@ -91,7 +107,10 @@ class Heroe inherits Personaje {
     method disparar() {
         if (ticksDesdeDisparo >= arma.cadencia()) {
             ticksDesdeDisparo = 0
-            juego.agregarProyectil(new Bala(position = position.right(1), danio = self.danioEfectivo()))
+            if(mirandoIzquierda){
+            juego.agregarProyectil(new Bala(position = position.left(1), danio = self.danioEfectivo(),direccion= -1))
+            }else
+            juego.agregarProyectil(new Bala(position = position.right(1), danio = self.danioEfectivo(),direccion= 1))
         }
     }
 
@@ -136,6 +155,11 @@ class Heroe inherits Personaje {
             game.say(self, arma.nombre() + " subió de nivel!")
         }
     }
+    method desangrar(cantidadPorTick, duracionMs){ 
+    game.schedule(1000, { self.recibirAtaque(cantidadPorTick) })
+    game.schedule(2000, { self.recibirAtaque(cantidadPorTick) })
+    game.schedule(3000, { self.recibirAtaque(cantidadPorTick) })
+    }//ULTIMO
 }// ! CLase Enemigo
 class Enemigo inherits Personaje {
     var ticks = 0
@@ -292,5 +316,52 @@ class JefeSaddler inherits Enemigo {
         }
     }
 }
+
+class JefeKrauser inherits Enemigo{
+    var ataques = 0
+    var modoVeloz = false
+    var ticksPropios = 0
+
+    const frases = [
+        "Que es eso que te motiva, camarada.",
+        "Pensaste que estaba muerto?, Leon.",
+        "¡Tienes que dejar de vivir en el pasado!.",
+        "No te entrené lo suficiente, Leon"
+        
+    ]
+    override method vidaMaxima() = 500
+    override method danio() = 10
+    override method ritmoMovimiento() = if(modoVeloz) 6 else 13 //duplica su velocidad en modo veloz
+    override method ritmoAtaque() = 8
+    override method image() = "assets/krauser.png"
+
+    method curar(cantidad) {
+    danioRecibido = (danioRecibido - cantidad).max(0)
+}
+
+    override method atacar(objetivo) {
+        super(objetivo)
+        objetivo.desangrar(5, 3000)
+        self.curar(10) //se cura
+        game.say(self,frases )
+    }
+   
+
+    override method actualizar() {
+    super()
+    ticksPropios += 1
+    if (ticksPropios % 50 == 0) {
+        modoVeloz = !modoVeloz
+        if (modoVeloz) {
+            game.say(self, "¡Demasiado lento, Leon!")
+        }
+    }
+}
+
+}
+
+
+
+
 
 const heroe = new Heroe(position = game.at(1, 2))
