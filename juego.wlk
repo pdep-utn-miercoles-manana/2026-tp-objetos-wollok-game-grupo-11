@@ -2,6 +2,7 @@
 // juego.wlk
 // juego.wlk
 // juego.wlk
+// juego.wlk
 import wollok.game.*
 import armas.*
 import humanos.*
@@ -16,13 +17,39 @@ object hudVida {
 object hudArma {
     method position() = game.at(8, game.height() - 1)
     method textColor() = "FFFFFF"
-    method text() = heroe.arma().nombre() + " Nv." + heroe.arma().nivel() + "  Mejoras: " + heroe.mejoras()
+    method text() = heroe.arma().nombre() + " Nv." + heroe.arma().nivel() + "   Mejoras: " + heroe.mejoras() + "  Poder: " + heroe.poderActual()
 }
 
 object hudOleada {
     method position() = game.at(14, game.height() - 1)
     method textColor() = "FFFFFF"
     method text() = "Oleada " + juego.oleada() + "/" + juego.totalOleadas()
+}
+
+// ! Menú
+class TextoMenu {
+    var property position
+    const property text
+    const property textColor = "FFFFFF"
+}
+
+object menu {
+    const textos = [
+        new TextoMenu(position = game.at(4, 7), text = "Resident Evil: Wollok Edition", textColor = "FF0000"),
+        new TextoMenu(position = game.at(4, 6), text = "Presioná ENTER para jugar"),
+        new TextoMenu(position = game.at(4, 5), text = "WASD / flechas: moverse"),
+        new TextoMenu(position = game.at(4, 4), text = "ESPACIO: disparar"),
+        new TextoMenu(position = game.at(4, 3), text = "1 / 2 / 3: cambiar de arma"),
+        new TextoMenu(position = game.at(4, 2), text = "M: mejorar el arma")
+    ]
+
+    method mostrar() {
+        textos.forEach({ t => game.addVisual(t) })
+    }
+
+    method ocultar() {
+        textos.forEach({ t => game.removeVisual(t) })
+    }
 }
 
 // ! Objeto Juego
@@ -34,37 +61,52 @@ object juego {
     var property ticks = 0
     var property esperando = false
     var property terminado = false
+    var partidaEnCurso = false
 
     method totalOleadas() = 5
     method oleada() = oleada
     method filaMaxima() = game.height() - 2   
 
-    method configurar() {
-        game.title("Resident Evil: Wollok Edition")
-        game.width(16)
-        game.height(9)
-        game.cellSize(40)
+method configurar() {
+    game.title("Resident Evil: Wollok Edition")
+    game.width(16)
+    game.height(9)
+    game.cellSize(40)
 
-        game.addVisual(heroe)
-        game.addVisual(hudVida)
-        game.addVisual(hudArma)
-        game.addVisual(hudOleada)
+    menu.mostrar()
+    keyboard.enter().onPressDo({ self.empezar() })
+}
 
-        keyboard.up().onPressDo({ heroe.subir() })
-        keyboard.down().onPressDo({ heroe.bajar() })
-        keyboard.left().onPressDo({ heroe.izquierda() })
-        keyboard.right().onPressDo({ heroe.derecha() })
-        keyboard.w().onPressDo({ heroe.subir() })
-        keyboard.s().onPressDo({ heroe.bajar() })
-        keyboard.a().onPressDo({ heroe.izquierda() })
-        keyboard.d().onPressDo({ heroe.derecha() })
-        keyboard.space().onPressDo({ heroe.disparar() })
-
-        keyboard.num1().onPressDo({ heroe.equiparPistola() })
-        keyboard.num2().onPressDo({ heroe.equiparRifle() })
-        keyboard.num3().onPressDo({ heroe.equiparEscopeta() })
-        keyboard.m().onPressDo({ heroe.mejorarArma() })
+method empezar() {
+    if (!partidaEnCurso) {
+        partidaEnCurso = true
+        menu.ocultar()
+        self.prepararPartida()
+        self.iniciar()
     }
+}
+
+method prepararPartida() {
+    game.addVisual(heroe)
+    game.addVisual(hudVida)
+    game.addVisual(hudArma)
+    game.addVisual(hudOleada)
+
+    keyboard.up().onPressDo({ heroe.subir() })
+    keyboard.down().onPressDo({ heroe.bajar() })
+    keyboard.left().onPressDo({ heroe.izquierda() })
+    keyboard.right().onPressDo({ heroe.derecha() })
+    keyboard.w().onPressDo({ heroe.subir() })
+    keyboard.s().onPressDo({ heroe.bajar() })
+    keyboard.a().onPressDo({ heroe.izquierda() })
+    keyboard.d().onPressDo({ heroe.derecha() })
+    keyboard.space().onPressDo({ heroe.disparar() })
+
+    keyboard.num1().onPressDo({ heroe.equiparPistola() })
+    keyboard.num2().onPressDo({ heroe.equiparRifle() })
+    keyboard.num3().onPressDo({ heroe.equiparEscopeta() })
+    keyboard.m().onPressDo({ heroe.mejorarArma() })
+}
 
     method iniciar() {
         game.onTick(100, "buclePrincipal", { self.actualizar() })
@@ -86,15 +128,15 @@ object juego {
             return [self.zombieComun(), self.zombieComun(), self.zombieComun(), self.zombieComun()]
         }
         if (n == 2) {
-            return [self.zombieComun(), self.zombieRapido(), self.zombieComun(), self.ballestero(), self.zombieRapido()]
+            return [self.zombieComun(), self.zombieRapido(), self.zombieComun(), self.ballestero(), self.zombieRapido(), self.zombieComun(), self.ballestero()]
         }
         if (n == 3) {
-            return [self.zombieComun(), self.regenerador(), self.ballestero(), self.zombieRapido(), self.regenerador()]
+            return [self.zombieComun(), self.regenerador(), self.ballestero(), self.zombieRapido(), self.regenerador(), self.ballestero(), self.zombieComun(), self.zombieComun(), self.zombieRapido(), self.zombieComun()]
         }
         if (n == 4) {
-            return [self.regenerador(), self.ballestero(), self.zombieRapido(), self.regenerador(), self.ballestero(), self.zombieComun()]
+            return [self.regenerador(), self.ballestero(), self.zombieRapido(), self.regenerador(), self.ballestero(), self.zombieComun(), self.ballestero(), self.regenerador(), self.ballestero(), self.zombieComun(), self.zombieComun()]
         }
-        return [self.zombieComun(), self.ballestero(), self.jefe(), self.zombieRapido(), self.zombieComun(), self.zombieComun(), self.zombieComun()]
+        return [self.zombieComun(), self.ballestero(), self.regenerador(), self.regenerador() , self.jefe(), self.zombieRapido(), self.zombieComun(), self.ballestero(), self.zombieComun(), self.ballestero(), self.ballestero(), self.regenerador(), self.zombieRapido(), self.zombieComun()]
     }
 
 

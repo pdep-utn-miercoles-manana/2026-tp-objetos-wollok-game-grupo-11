@@ -1,9 +1,9 @@
+// jugar.wpgm
 import wollok.game.*
 import juego.*
 
 program residentEvil {
     juego.configurar()
-    juego.iniciar()
     game.start()
     game.boardGround("assets/background.jpg")
 }
